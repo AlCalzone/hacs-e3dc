@@ -3,11 +3,14 @@
 Rebuild custom_components/e3dc from the core integration and its library.
 
     scripts/vendor.py --library ../e3dc-ess-modbus --integration ../ha-core-e3dc
+    scripts/vendor.py --version 0.1.0b1
 
 The device library is copied into the integration as a subpackage, and the
-integration imports it relatively. A custom integration installs no
-requirements of its own, so the user does not need the library from PyPI.
+integration imports it relatively, because the library is not on PyPI yet.
 modbus-connection comes with Home Assistant's own modbus integration.
+
+Both source checkouts must be clean. The commits vendored are written to
+VENDORED. Without ``--version``, the manifest keeps its current version.
 """
 
 from __future__ import annotations
@@ -17,6 +20,7 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 import urllib.request
 from pathlib import Path
 
@@ -25,8 +29,9 @@ TARGET = ROOT / "custom_components" / "e3dc"
 # tests/conftest.py holds the fixtures core keeps outside the integration.
 TESTS = ROOT / "tests" / "e3dc"
 REPOSITORY = "https://github.com/AlCalzone/hacs-e3dc"
+# The common strings of the oldest Home Assistant release hacs.json allows
 CORE_STRINGS = (
-    "https://raw.githubusercontent.com/home-assistant/core/dev/"
+    "https://raw.githubusercontent.com/home-assistant/core/{version}/"
     "homeassistant/strings.json"
 )
 # Files a custom integration ships without.
@@ -137,13 +142,31 @@ def _write_manifest(version: str) -> None:
 def _write_translations(source: Path) -> None:
     """Resolve strings.json into the English translation Home Assistant loads."""
     strings = json.loads((source / "strings.json").read_text())
-    with urllib.request.urlopen(CORE_STRINGS, timeout=30) as response:  # noqa: S310
+    minimum = json.loads((ROOT / "hacs.json").read_text())["homeassistant"]
+    url = CORE_STRINGS.format(version=minimum)
+    with urllib.request.urlopen(url, timeout=30) as response:  # noqa: S310
         common = json.load(response)
     translations = TARGET / "translations"
     translations.mkdir()
     (translations / "en.json").write_text(
         json.dumps(_resolve(strings, common), indent=2, ensure_ascii=False) + "\n"
     )
+
+
+def _clean_commit(path: Path) -> str:
+    """Return the commit a source checkout is at, or exit if it is not clean."""
+
+    def git(*args: str) -> str:
+        return subprocess.run(  # noqa: S603
+            ["git", "-C", str(path), *args],  # noqa: S607
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+    if git("status", "--porcelain"):
+        sys.exit(f"{path} has uncommitted changes")
+    return git("rev-parse", "HEAD")
 
 
 def main() -> None:
@@ -153,10 +176,14 @@ def main() -> None:
     parser.add_argument(
         "--integration", type=Path, default=ROOT.parent / "ha-core-e3dc"
     )
+    parser.add_argument("--version", help="the version to write into the manifest")
     args = parser.parse_args()
 
-    version = "0.0.0"
-    if (manifest := TARGET / "manifest.json").exists():
+    sources = {"e3dc-ess-modbus": args.library, "ha-core-e3dc": args.integration}
+    commits = {name: _clean_commit(path) for name, path in sources.items()}
+
+    version = args.version or "0.0.0"
+    if args.version is None and (manifest := TARGET / "manifest.json").exists():
         version = json.loads(manifest.read_text())["version"]
 
     integration = args.integration / "homeassistant" / "components" / "e3dc"
@@ -169,13 +196,14 @@ def main() -> None:
     _write_manifest(version)
     _write_translations(integration)
     # The rewritten imports sort differently from the originals.
+    ruff = [sys.executable, "-m", "ruff"]
     subprocess.run(  # noqa: S603
-        ["ruff", "check", "--select", "I", "--fix", "--quiet", TARGET, TESTS],  # noqa: S607
+        [*ruff, "check", "--select", "I", "--fix", "--quiet", TARGET, TESTS],
         check=True,
     )
-    subprocess.run(  # noqa: S603
-        ["ruff", "format", "--quiet", TARGET, TESTS],  # noqa: S607
-        check=True,
+    subprocess.run([*ruff, "format", "--quiet", TARGET, TESTS], check=True)  # noqa: S603
+    (ROOT / "VENDORED").write_text(
+        "".join(f"{name} {commit}\n" for name, commit in commits.items())
     )
 
 

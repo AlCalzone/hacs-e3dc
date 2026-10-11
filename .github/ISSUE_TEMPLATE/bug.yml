@@ -52,3 +52,5 @@ body:
   attributes:
     label: "Diagnostics dump"
     description: "Drag the diagnostics dump file here. (see https://www.home-assistant.io/integrations/diagnostics/ for info)"
+  validations:
+    required: true
