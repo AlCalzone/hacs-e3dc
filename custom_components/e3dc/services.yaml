@@ -1,0 +1,56 @@
+set_battery_power:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: e3dc
+    power:
+      required: true
+      selector:
+        number:
+          min: -100000
+          max: 100000
+          unit_of_measurement: W
+          mode: box
+
+stop_battery_control:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: e3dc
+
+set_feed_in_limit:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: e3dc
+    power:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100000
+          unit_of_measurement: W
+          mode: box
+
+set_active_power_limit:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: e3dc
+    limit:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          unit_of_measurement: "%"
+          mode: box

@@ -1,0 +1,22 @@
+{
+  "domain": "e3dc",
+  "name": "E3/DC",
+  "codeowners": [
+    "@AlCalzone"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "modbus"
+  ],
+  "documentation": "https://github.com/AlCalzone/hacs-e3dc",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/AlCalzone/hacs-e3dc/issues",
+  "loggers": [
+    "custom_components.e3dc.e3dc_ess_modbus",
+    "modbus_connection",
+    "tmodbus"
+  ],
+  "requirements": [],
+  "version": "0.1.0"
+}

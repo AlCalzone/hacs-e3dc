@@ -1,0 +1,75 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "charging_locked": {
+        "default": "mdi:battery-lock"
+      },
+      "discharging_locked": {
+        "default": "mdi:battery-lock"
+      },
+      "feed_in_limited": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "weather_based_charging": {
+        "default": "mdi:weather-partly-cloudy"
+      }
+    },
+    "sensor": {
+      "autarky": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "emergency_power_status": {
+        "default": "mdi:power-plug-battery"
+      },
+      "grid_power": {
+        "default": "mdi:transmission-tower"
+      },
+      "house_power": {
+        "default": "mdi:home-lightning-bolt-outline"
+      },
+      "inverter_mode": {
+        "default": "mdi:sine-wave"
+      },
+      "power_meter_type": {
+        "default": "mdi:meter-electric"
+      },
+      "pv_power": {
+        "default": "mdi:solar-power"
+      },
+      "self_consumption": {
+        "default": "mdi:solar-power-variant"
+      },
+      "wallbox_power": {
+        "default": "mdi:ev-station"
+      },
+      "wallbox_solar_power": {
+        "default": "mdi:ev-station"
+      }
+    },
+    "switch": {
+      "charging_enabled": {
+        "default": "mdi:ev-station"
+      },
+      "one_phase": {
+        "default": "mdi:numeric-1-circle-outline"
+      },
+      "solar_mode": {
+        "default": "mdi:solar-power"
+      }
+    }
+  },
+  "services": {
+    "set_active_power_limit": {
+      "service": "mdi:speedometer-slow"
+    },
+    "set_battery_power": {
+      "service": "mdi:home-battery"
+    },
+    "set_feed_in_limit": {
+      "service": "mdi:transmission-tower-export"
+    },
+    "stop_battery_control": {
+      "service": "mdi:battery-sync"
+    }
+  }
+}

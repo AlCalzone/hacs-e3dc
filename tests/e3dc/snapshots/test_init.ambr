@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_device_info
+  list([
+    tuple(
+      'Inverter 0',
+      None,
+      None,
+      None,
+    ),
+    tuple(
+      'Power meter 0',
+      None,
+      None,
+      None,
+    ),
+    tuple(
+      'S10 X',
+      'HagerEnergy GmbH',
+      'S10 X',
+      'S10_2026_04',
+    ),
+    tuple(
+      'Wallbox 0',
+      None,
+      None,
+      None,
+    ),
+  ])
+# ---
