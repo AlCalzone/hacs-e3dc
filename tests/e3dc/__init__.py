@@ -3,7 +3,7 @@
 from homeassistant.const import CONF_HOST, CONF_PORT
 from modbus_connection.mock import MockModbusUnit
 
-from custom_components.e3dc.e3dc_ess_modbus import register
+from custom_components.e3dc.e3dc_ess_modbus.model import register
 
 MOCK_SERIAL = "S10-12345678912"
 MOCK_MODEL = "S10 X"

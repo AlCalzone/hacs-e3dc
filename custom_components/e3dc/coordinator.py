@@ -16,6 +16,7 @@ from propcache.api import cached_property
 
 from .const import DEFAULT_NAME, DOMAIN
 from .e3dc_ess_modbus import E3dcPowerStation, NotAnE3dcError, UpdateReport
+from .holds import E3dcHolds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class E3dcDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
         for name, cause in report.failed.items():
             if name not in self._failing:
-                _LOGGER.warning(
+                _LOGGER.info(
                     "%s: %s failed to refresh and is unavailable: %s",
                     self.name,
                     name,
@@ -101,8 +102,9 @@ class E3dcRuntimeData:
     readings: E3dcDataUpdateCoordinator
     settings: E3dcDataUpdateCoordinator
     station_device_id: str
-    # The wallboxes each platform has added entities for, keyed by platform.
-    wired_wallboxes: dict[str, set[int]] = field(default_factory=dict)
+    holds: E3dcHolds
+    # The parts each platform has added entities for, keyed by (kind, platform).
+    wired_parts: dict[tuple[str, str], set[int]] = field(default_factory=dict)
 
     @property
     def device(self) -> E3dcPowerStation:

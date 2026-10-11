@@ -15,7 +15,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import E3dcConfigEntry
 from .e3dc_ess_modbus import E3dcPowerStation, EmsStatus
-from .entity import E3dcEntity, E3dcEntityDescription, async_add_wallbox_entities
+from .entity import (
+    E3dcEntity,
+    E3dcEntityDescription,
+    async_add_part_entities,
+    present_wallboxes,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -56,11 +61,11 @@ STATION_BINARY_SENSORS: tuple[E3dcBinarySensorDescription, ...] = (
     E3dcBinarySensorDescription(
         key="power_output_ready",
         translation_key="power_output_ready",
-        component="grid_control",
+        component="grid_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: (
-            grid.power_output_ready
-            if (grid := device.grid_control) is not None
+            status.power_output_ready
+            if (status := device.grid_status) is not None
             else None
         ),
     ),
@@ -119,9 +124,12 @@ async def async_setup_entry(
         for description in STATION_BINARY_SENSORS
         if description.component in served
     )
-    async_add_wallbox_entities(
+
+    async_add_part_entities(
         entry,
         Platform.BINARY_SENSOR,
+        "wallbox",
+        present_wallboxes,
         async_add_entities,
         lambda number: (
             E3dcBinarySensor(runtime_data, description)

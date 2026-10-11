@@ -2,7 +2,7 @@
 
 Connect an E3/DC home power station to Home Assistant over Modbus TCP. This is the custom integration build of the `e3dc` integration, for testing through [HACS](https://hacs.xyz) before the integration lands in Home Assistant itself.
 
-It reads the power flows between solar, battery, house, grid and wallboxes, the power meters and inverters, and the energy management status. It can switch E3/DC wallboxes between solar and hybrid charging, and charge or discharge the battery on command.
+It reads the power flows between solar, battery, house, grid and wallboxes, the power meters and inverters, and the energy management status. It can switch E3/DC wallboxes between solar and hybrid charging, charge or discharge the battery on command, and limit the feed-in and the inverter's output.
 
 ## Requirements
 
@@ -32,14 +32,13 @@ On the power station device:
 
 A device per configured power meter, per inverter, and per wallbox. Each wallbox has switches for **Charging**, **Solar charging** and **Single-phase charging**.
 
-Actions, for administrators, on firmware that supports them:
+On firmware that supports remote control, each setpoint is a number and a switch:
 
-- `e3dc.set_battery_power` charges (positive) or discharges (negative) the battery at a fixed power.
-- `e3dc.stop_battery_control` hands the battery back to the power station at once.
-- `e3dc.set_feed_in_limit` caps the power fed into the grid.
-- `e3dc.set_active_power_limit` caps the inverter's output as a percentage of its rated power.
+- **Battery power setpoint** and **Battery power control**: charge (positive) or discharge (negative) the battery at a fixed power.
+- **Feed-in limit setpoint** and **Feed-in limit control**: cap the power fed into the grid.
+- **Active power limit setpoint** and **Active power limit control**: cap the inverter's output as a percentage of its rated power.
 
-The power station drops a setpoint 30 seconds after it was last written, so an automation has to repeat these actions to hold one.
+Setting a number writes it and turns its switch on. The power station drops a setpoint 30 seconds after the last write, so while the switch is on, the integration writes it again every 10 seconds. Turning the switch off hands control back, and turning it on again holds the last value, also after a restart. A switch shows unknown while writing to the power station fails.
 
 The integration has no energy counters, because the power station reports none over Modbus. For the Energy dashboard, create [Integral](https://www.home-assistant.io/integrations/integration/) helpers from the power sensors.
 

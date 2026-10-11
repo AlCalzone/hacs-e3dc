@@ -10,7 +10,7 @@ from pytest_homeassistant_custom_component.components.diagnostics import (
 from pytest_homeassistant_custom_component.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from custom_components.e3dc.e3dc_ess_modbus import register
+from custom_components.e3dc.e3dc_ess_modbus.model import register
 
 
 async def test_diagnostics(

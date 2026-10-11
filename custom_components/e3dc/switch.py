@@ -12,9 +12,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from modbus_connection import ModbusError
 
 from .const import DOMAIN
-from .coordinator import E3dcConfigEntry
-from .e3dc_ess_modbus import E3dcPowerStation
-from .entity import E3dcEntity, E3dcEntityDescription, async_add_wallbox_entities
+from .coordinator import E3dcConfigEntry, E3dcRuntimeData
+from .e3dc_ess_modbus import E3dcError, E3dcPowerStation, Setpoint
+from .entity import (
+    E3dcEntity,
+    E3dcEntityDescription,
+    async_add_part_entities,
+    present_wallboxes,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -36,14 +41,10 @@ def wallbox_switches(number: int) -> list[E3dcSwitchEntityDescription]:
             translation_key="charging_enabled",
             component="wallboxes",
             part=part,
-            value_fn=lambda device: (
-                None
-                if (aborted := device.wallboxes.slots[number].charging_aborted) is None
-                else not aborted
-            ),
+            value_fn=lambda device: device.wallboxes.slots[number].charging_allowed,
             write_fn=lambda device, value: device.wallboxes.slots[
                 number
-            ].async_write_charging(value),
+            ].async_write_charging_allowed(value),
         ),
         E3dcSwitchEntityDescription(
             key=f"wallbox_{number}_solar_mode",
@@ -68,6 +69,35 @@ def wallbox_switches(number: int) -> list[E3dcSwitchEntityDescription]:
     ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class E3dcSetpointSwitchDescription(SwitchEntityDescription, E3dcEntityDescription):
+    """Describe a switch that holds a setpoint or hands it back."""
+
+    setpoint: Setpoint
+
+
+SETPOINT_SWITCHES: tuple[E3dcSetpointSwitchDescription, ...] = (
+    E3dcSetpointSwitchDescription(
+        key="battery_power_control",
+        translation_key="battery_power_control",
+        component="battery_control",
+        setpoint=Setpoint.BATTERY_POWER,
+    ),
+    E3dcSetpointSwitchDescription(
+        key="feed_in_limit_control",
+        translation_key="feed_in_limit_control",
+        component="grid_control",
+        setpoint=Setpoint.FEED_IN_LIMIT,
+    ),
+    E3dcSetpointSwitchDescription(
+        key="active_power_limit_control",
+        translation_key="active_power_limit_control",
+        component="grid_control",
+        setpoint=Setpoint.ACTIVE_POWER_LIMIT,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: E3dcConfigEntry,
@@ -75,9 +105,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the E3/DC switch platform."""
     runtime_data = entry.runtime_data
-    async_add_wallbox_entities(
+    served = runtime_data.served_components
+    async_add_entities(
+        E3dcSetpointSwitch(runtime_data, description)
+        for description in SETPOINT_SWITCHES
+        if description.component in served
+    )
+    async_add_part_entities(
         entry,
         Platform.SWITCH,
+        "wallbox",
+        present_wallboxes,
         async_add_entities,
         lambda number: (
             E3dcSwitch(runtime_data, description)
@@ -100,7 +138,7 @@ class E3dcSwitch(E3dcEntity, SwitchEntity):
         """Write the switch state to the device."""
         try:
             await self.entity_description.write_fn(self.coordinator.device, value)
-        except ModbusError as err:
+        except (ModbusError, E3dcError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
@@ -114,3 +152,48 @@ class E3dcSwitch(E3dcEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._async_write(False)
+
+
+class E3dcSetpointSwitch(E3dcEntity, SwitchEntity):
+    """On while the integration holds a setpoint.
+
+    It is unknown while a rewrite or a hand-back fails, because the device
+    may hold either state then.
+    """
+
+    entity_description: E3dcSetpointSwitchDescription
+
+    def __init__(
+        self,
+        runtime_data: E3dcRuntimeData,
+        entity_description: E3dcSetpointSwitchDescription,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(runtime_data, entity_description)
+        self._holds = runtime_data.holds
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(self._holds.async_add_listener(self.async_write_ha_state))
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Always, because holding a setpoint doesn't depend on the last poll."""
+        return True
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        if (hold := self._holds.get(self.entity_description.setpoint)) is None:
+            return False
+        return True if hold.confirmed else None
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._holds.async_resume(self.entity_description.setpoint)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._holds.async_stop(self.entity_description.setpoint)

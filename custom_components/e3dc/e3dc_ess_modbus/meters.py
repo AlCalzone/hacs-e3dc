@@ -13,7 +13,8 @@ POWER_METER_COUNT = 8
 class PowerMeter(E3dcComponent):
     """One meter slot's type and per-phase power, in 16 bits."""
 
-    meter_type = enum(register(40105), PowerMeterType)
+    meter_type = enum(register(40105), PowerMeterType, nan=0)
+    """``None`` for an empty slot, which reads 0, a type the manual doesn't list."""
     power_l1 = integer(register(40106), unit="W")
     power_l2 = integer(register(40107), unit="W")
     power_l3 = integer(register(40108), unit="W")

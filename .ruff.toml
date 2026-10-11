@@ -32,10 +32,13 @@ max-complexity = 25
 # core's narrower rule set.
 "custom_components/e3dc/*" = [
     "ARG001", # Platform setup functions take hass whether they use it or not
+    "ARG002",
+    "D213", # Core puts a docstring's summary on its first line
     "D401",
     "E501",
     "FBT001",
     "FBT003",
+    "PLR0913",
     "PLW2901",
     "S101",
     "TC001",
@@ -47,6 +50,8 @@ max-complexity = 25
     "ARG005",
     "D104",
     "D401",
+    "FBT001",
+    "FBT003",
     "PLR0913",
     "PLR2004",
     "S101",

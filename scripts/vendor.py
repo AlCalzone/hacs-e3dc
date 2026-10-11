@@ -173,6 +173,10 @@ def main() -> None:
         ["ruff", "check", "--select", "I", "--fix", "--quiet", TARGET, TESTS],  # noqa: S607
         check=True,
     )
+    subprocess.run(  # noqa: S603
+        ["ruff", "format", "--quiet", TARGET, TESTS],  # noqa: S607
+        check=True,
+    )
 
 
 if __name__ == "__main__":

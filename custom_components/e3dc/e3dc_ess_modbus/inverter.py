@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
-from modbus_connection.model import gauge, int32, integer
+from collections.abc import Iterator, Mapping
+from typing import TYPE_CHECKING
+
+from modbus_connection.model import ComponentGroup, gauge, int32, integer
 
 from .model import E3dcComponent, register
 
 INVERTER_COUNT = 8
 INVERTER_STRIDE = 34
+
+if TYPE_CHECKING:
+    from modbus_connection import ModbusUnit
 
 
 class Inverter(E3dcComponent):
@@ -50,3 +56,28 @@ class Inverter(E3dcComponent):
         return any(
             voltage for voltage in (self.voltage_l1, self.voltage_l2, self.voltage_l3)
         )
+
+
+class Inverters(ComponentGroup, Mapping[int, Inverter]):
+    """The inverter slots that answer their registers, keyed by slot."""
+
+    # Compare and hash by identity, the way a component does
+    __eq__ = object.__eq__
+    __hash__ = object.__hash__
+
+    def __init__(self, unit: ModbusUnit, slots: dict[int, Inverter]) -> None:
+        """Set up the group over the slots setup found."""
+        self._slots = slots
+        super().__init__(unit, slots.values())
+
+    def __getitem__(self, slot: int) -> Inverter:
+        """The inverter in ``slot``."""
+        return self._slots[slot]
+
+    def __iter__(self) -> Iterator[int]:
+        """The slots, in order."""
+        return iter(self._slots)
+
+    def __len__(self) -> int:
+        """How many slots answered at setup."""
+        return len(self._slots)

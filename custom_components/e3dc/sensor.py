@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -35,7 +36,13 @@ from .e3dc_ess_modbus import (
     PowerMeterType,
 )
 from .e3dc_ess_modbus.inverter import Inverter
-from .entity import E3dcEntity, E3dcEntityDescription
+from .entity import (
+    E3dcEntity,
+    E3dcEntityDescription,
+    async_add_part_entities,
+    present_inverters,
+    present_meters,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -51,7 +58,7 @@ def _dc_string_value(
     """Read ``attribute`` of DC string ``number``."""
 
     def _value(device: E3dcPowerStation) -> StateType:
-        value: StateType = getattr(device.dc_string_list[number - 1], attribute)
+        value: StateType = getattr(device.dc_strings[number], attribute)
         return value
 
     return _value
@@ -63,7 +70,9 @@ def _meter_phase_value(
     """Read the power on ``phase`` of power meter slot ``number``."""
 
     def _value(device: E3dcPowerStation) -> StateType:
-        value: StateType = getattr(device.power_meter(number), f"power_{phase}")
+        value: StateType = getattr(
+            device.power_meter_readings[number], f"power_{phase}"
+        )
         return value
 
     return _value
@@ -244,18 +253,6 @@ STATION_SENSORS: tuple[E3dcSensorDescription, ...] = (
         ),
     ),
     E3dcSensorDescription(
-        key="feed_in_limit",
-        translation_key="feed_in_limit",
-        component="grid_control",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: (
-            grid.feed_in_limit if (grid := device.grid_control) is not None else None
-        ),
-    ),
-    E3dcSensorDescription(
         key="active_power_failsafe_timeout",
         translation_key="active_power_failsafe_timeout",
         component="grid_control",
@@ -286,13 +283,13 @@ STATION_SENSORS: tuple[E3dcSensorDescription, ...] = (
     E3dcSensorDescription(
         key="inverter_mode",
         translation_key="inverter_mode",
-        component="battery_control",
+        component="inverter_mode_control",
         device_class=SensorDeviceClass.ENUM,
         options=_enum_options(InverterMode),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: (
-            battery.inverter_mode
-            if (battery := device.battery_control) is not None
+            mode.inverter_mode
+            if (mode := device.inverter_mode_control) is not None
             else None
         ),
     ),
@@ -311,7 +308,7 @@ def _power_meter_sensors(number: int) -> list[E3dcSensorDescription]:
             device_class=SensorDeviceClass.ENUM,
             options=_enum_options(PowerMeterType),
             entity_category=EntityCategory.DIAGNOSTIC,
-            value_fn=lambda device: device.power_meter(number).meter_type,
+            value_fn=lambda device: device.power_meter_readings[number].meter_type,
         ),
         E3dcSensorDescription(
             key=f"power_meter_{number}_power",
@@ -322,7 +319,7 @@ def _power_meter_sensors(number: int) -> list[E3dcSensorDescription]:
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda device: _sum(
                 (
-                    (meter := device.power_meter(number)).power_l1,
+                    (meter := device.power_meter_readings[number]).power_l1,
                     meter.power_l2,
                     meter.power_l3,
                 )
@@ -352,7 +349,8 @@ def _inverter_value(
     """Read ``attribute`` of inverter slot ``number``."""
 
     def _value(device: E3dcPowerStation) -> StateType:
-        inverter: Inverter = device.inverter_slots[number]
+        assert device.inverters is not None
+        inverter: Inverter = device.inverters[number]
         value: StateType = getattr(inverter, attribute)
         return value
 
@@ -478,15 +476,8 @@ def _sum(values: tuple[int | None, ...]) -> int | None:
 
 def _descriptions(runtime_data: E3dcRuntimeData) -> list[E3dcSensorDescription]:
     """Every sensor this power station serves."""
-    device = runtime_data.device
     served = runtime_data.served_components
-    descriptions = [d for d in STATION_SENSORS if d.component in served]
-    for number in range(len(device.power_meters.meters)):
-        if device.power_meter(number).is_installed:
-            descriptions.extend(_power_meter_sensors(number))
-    for number in device.inverter_slots:
-        descriptions.extend(_inverter_sensors(number))
-    return descriptions
+    return [d for d in STATION_SENSORS if d.component in served]
 
 
 async def async_setup_entry(
@@ -499,6 +490,28 @@ async def async_setup_entry(
     async_add_entities(
         E3dcSensor(runtime_data, description)
         for description in _descriptions(runtime_data)
+    )
+    async_add_part_entities(
+        entry,
+        Platform.SENSOR,
+        "power_meter",
+        present_meters,
+        async_add_entities,
+        lambda number: (
+            E3dcSensor(runtime_data, description)
+            for description in _power_meter_sensors(number)
+        ),
+    )
+    async_add_part_entities(
+        entry,
+        Platform.SENSOR,
+        "inverter",
+        present_inverters,
+        async_add_entities,
+        lambda number: (
+            E3dcSensor(runtime_data, description)
+            for description in _inverter_sensors(number)
+        ),
     )
 
 

@@ -86,6 +86,7 @@ async def test_user_step_success(
     [
         pytest.param(ModbusTimeoutError(), "cannot_connect", id="timeout"),
         pytest.param(HomeAssistantError("in use"), "cannot_connect", id="in_use"),
+        pytest.param(RuntimeError("bug"), "unknown", id="unexpected"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -233,12 +234,12 @@ async def test_reconfigure_cannot_connect(
     assert result["reason"] == "reconfigure_successful"
 
 
-async def test_reconfigure_loaded_entry_on_new_port(
+async def test_reconfigure_reloads_a_loaded_entry(
     hass: HomeAssistant,
     identified: MockModbusConnection,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test a loaded entry releases its link before probing the same host."""
+    """Test reconfiguring a loaded entry sets it up again on the new port."""
     result = await init_integration.start_reconfigure_flow(hass)
     with (
         _patch_temporary_unit(identified),

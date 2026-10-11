@@ -5,9 +5,10 @@
       "unique_id_mismatch": "Please reconfigure the same power station you originally set up."
     },
     "error": {
-      "cannot_connect": "Failed to connect: {error}",
+      "cannot_connect": "Failed to connect",
       "no_serial_number": "The power station answered, but reports no serial number.",
-      "not_e3dc": "The device answered, but it is not an E3/DC power station in E3/DC protocol mode. Set the Modbus protocol to E3DC in the power station's Smart Home menu."
+      "not_e3dc": "The device answered, but it is not an E3/DC power station in E3/DC protocol mode. Set the Modbus protocol to E3DC in the power station's Smart Home menu.",
+      "unknown": "Unexpected error"
     },
     "step": {
       "reconfigure": {
@@ -81,6 +82,17 @@
         "name": "Weather-based charging"
       }
     },
+    "number": {
+      "active_power_limit_setpoint": {
+        "name": "Active power limit setpoint"
+      },
+      "battery_power_setpoint": {
+        "name": "Battery power setpoint"
+      },
+      "feed_in_limit_setpoint": {
+        "name": "Feed-in limit setpoint"
+      }
+    },
     "sensor": {
       "active_power_failsafe_timeout": {
         "name": "Active power failsafe timeout"
@@ -112,9 +124,6 @@
           "not_available": "Not available",
           "not_supported": "Not supported"
         }
-      },
-      "feed_in_limit": {
-        "name": "Feed-in limit"
       },
       "full_charge_energy": {
         "name": "Battery capacity"
@@ -248,8 +257,17 @@
       }
     },
     "switch": {
+      "active_power_limit_control": {
+        "name": "Active power limit control"
+      },
+      "battery_power_control": {
+        "name": "Battery power control"
+      },
       "charging_enabled": {
         "name": "Charging"
+      },
+      "feed_in_limit_control": {
+        "name": "Feed-in limit control"
       },
       "one_phase": {
         "name": "Single-phase charging"
@@ -260,8 +278,14 @@
     }
   },
   "exceptions": {
-    "invalid_action_value": {
-      "message": "The provided value is not valid for this action."
+    "battery_power_inconsistent": {
+      "message": "The battery power was only partly written. The integration tried to end remote battery control."
+    },
+    "feed_in_limit_inconsistent": {
+      "message": "The feed-in limit was only partly written. The integration tried to write the previous limit back, if it knew one."
+    },
+    "link_settings_in_use": {
+      "message": "The power station is already in use with other Modbus link settings: {error}"
     },
     "modbus_error": {
       "message": "Error communicating with the power station."
@@ -269,68 +293,20 @@
     "no_component_answered": {
       "message": "No component answered."
     },
+    "no_setpoint": {
+      "message": "Set a value first. There is no setpoint to hold yet."
+    },
     "not_e3dc": {
       "message": "The device is not an E3/DC power station in E3/DC protocol mode."
     },
-    "unsupported_action": {
-      "message": "{title} does not support this action. Its firmware may be too old."
+    "not_loaded": {
+      "message": "Home Assistant is stopping or the entry is unloading, so no new setpoint is taken."
+    },
+    "serial_mismatch": {
+      "message": "The device at this address has serial number {found}, not {expected}. Reconfigure the entry if the power station moved."
     },
     "write_failed": {
       "message": "Failed to write to the power station."
-    }
-  },
-  "services": {
-    "set_active_power_limit": {
-      "description": "Caps the inverter's active power as a percentage of its rated power. The cap ignores the house's consumption and holds until the active power failsafe timeout runs out.",
-      "fields": {
-        "config_entry_id": {
-          "description": "The E3/DC power station to send this to.",
-          "name": "Power station"
-        },
-        "limit": {
-          "description": "The output ceiling, as a percentage of rated power.",
-          "name": "Limit"
-        }
-      },
-      "name": "Set active power limit"
-    },
-    "set_battery_power": {
-      "description": "Charges or discharges the battery at a fixed power. PV power charges first and the grid makes up the rest. The power station returns to normal control unless this is sent again within 30 seconds.",
-      "fields": {
-        "config_entry_id": {
-          "description": "The E3/DC power station to send this to.",
-          "name": "Power station"
-        },
-        "power": {
-          "description": "Positive values charge the battery, negative values discharge it.",
-          "name": "Power"
-        }
-      },
-      "name": "Set battery power"
-    },
-    "set_feed_in_limit": {
-      "description": "Caps the power fed into the grid. The power station returns to its own limit unless this is sent again within 30 seconds.",
-      "fields": {
-        "config_entry_id": {
-          "description": "The E3/DC power station to send this to.",
-          "name": "Power station"
-        },
-        "power": {
-          "description": "The most power to feed into the grid.",
-          "name": "Power"
-        }
-      },
-      "name": "Set feed-in limit"
-    },
-    "stop_battery_control": {
-      "description": "Ends remote battery control at once, without waiting for its 30-second timeout.",
-      "fields": {
-        "config_entry_id": {
-          "description": "The E3/DC power station to send this to.",
-          "name": "Power station"
-        }
-      },
-      "name": "Stop battery control"
     }
   }
 }
