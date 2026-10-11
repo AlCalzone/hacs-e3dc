@@ -1,8 +1,8 @@
 """Remote control of the grid connection and the battery, registers 40186 to 40210.
 
-Several of these registers are write-only, so the components read only the
+Several of these registers are write-only. The components read only the
 readable ones and offer a method per write-only setpoint. Each setpoint holds
-for a timeout, 30 seconds by default, so a caller rewrites it to keep it.
+for a timeout, 30 seconds by default.
 """
 
 from __future__ import annotations

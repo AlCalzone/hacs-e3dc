@@ -128,7 +128,7 @@ def _write_manifest(version: str) -> None:
     ]
     manifest["requirements"] = []
     manifest["version"] = version
-    # Core sorts the keys after domain and name; hassfest checks the same order.
+    # Hassfest wants domain and name first, then the other keys sorted.
     ordered = {key: manifest[key] for key in ("domain", "name")}
     ordered.update(sorted((k, v) for k, v in manifest.items() if k not in ordered))
     path.write_text(json.dumps(ordered, indent=2) + "\n")

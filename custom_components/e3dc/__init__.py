@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> bool
     await readings.async_config_entry_first_refresh()
     await settings.async_refresh()
 
-    # Up front: a part's device must name a power station that has an id.
+    # Register the power station first, because each part links to its id.
     station = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **readings.device_info
     )

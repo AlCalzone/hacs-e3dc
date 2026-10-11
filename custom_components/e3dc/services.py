@@ -25,7 +25,7 @@ ATTR_POWER = "power"
 
 _ENTRY_SCHEMA = probatio.Schema({probatio.Required(ATTR_CONFIG_ENTRY_ID): str})
 
-# The selectors in services.yaml only bound the UI, not a scripted call.
+# The selectors in services.yaml bound only the UI. This bounds scripted calls.
 _POWER_RANGE = probatio.All(
     probatio.Coerce(int), probatio.Range(min=-100000, max=100000)
 )

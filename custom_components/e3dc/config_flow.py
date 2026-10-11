@@ -87,8 +87,8 @@ class E3dcConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            # The entry's own hold on the old link would refuse a probe over
-            # the same endpoint with other settings, so release it first.
+            # Release the entry's hold on the old link first, because the
+            # shared connection refuses other settings for the same endpoint.
             relinking = False
             if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
                 current = create_modbus_params(entry.data)
