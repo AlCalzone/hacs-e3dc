@@ -52,6 +52,14 @@ async def _async_probe(
         return device
 
 
+def _title(model: str | None) -> str:
+    """Name the power station after the brand and its model, e.g. E3/DC One."""
+    if not model:
+        return DEFAULT_NAME
+    # The E3/DC one reports its model in lower case
+    return f"{DEFAULT_NAME} {model[0].upper()}{model[1:]}"
+
+
 class E3dcConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle an E3/DC config flow."""
 
@@ -69,7 +77,7 @@ class E3dcConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(device.serial_number)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=device.model or DEFAULT_NAME, data=user_input
+                    title=_title(device.model), data=user_input
                 )
 
         return self.async_show_form(

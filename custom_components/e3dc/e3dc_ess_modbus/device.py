@@ -190,6 +190,17 @@ class E3dcPowerStation(Device):
         self.battery_control = await self._async_probe(battery_control)
         self.inverter_mode_control = await self._async_probe(InverterModeControl(unit))
         self.battery_limits = await self._async_probe(battery_limits)
+        if (
+            self.battery_limits is not None
+            and not self.battery_limits.full_charge_energy
+        ):
+            # Some firmware answers the block, but only with zeros
+            _LOGGER.info(
+                "Power station %s reports no battery capacity in BatteryLimits "
+                "(registers 40203-40210), so it is not polled",
+                self.serial_number,
+            )
+            self.battery_limits = None
         await self._async_find_inverters()
         _LOGGER.debug(
             "Power station %s, model %s, firmware %s; readings: %s; settings: %s",

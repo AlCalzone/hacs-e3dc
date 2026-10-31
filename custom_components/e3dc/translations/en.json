@@ -106,15 +106,6 @@
       "battery_power": {
         "name": "Battery power"
       },
-      "dc_string_current": {
-        "name": "DC string {number} current"
-      },
-      "dc_string_power": {
-        "name": "DC string {number} power"
-      },
-      "dc_string_voltage": {
-        "name": "DC string {number} voltage"
-      },
       "emergency_power_status": {
         "name": "Emergency power",
         "state": {
@@ -167,17 +158,26 @@
       "inverter_dc_current_2": {
         "name": "DC current 2"
       },
+      "inverter_dc_current_3": {
+        "name": "DC current 3"
+      },
       "inverter_dc_power_1": {
         "name": "DC power 1"
       },
       "inverter_dc_power_2": {
         "name": "DC power 2"
       },
+      "inverter_dc_power_3": {
+        "name": "DC power 3"
+      },
       "inverter_dc_voltage_1": {
         "name": "DC voltage 1"
       },
       "inverter_dc_voltage_2": {
         "name": "DC voltage 2"
+      },
+      "inverter_dc_voltage_3": {
+        "name": "DC voltage 3"
       },
       "inverter_frequency": {
         "name": "Frequency"
@@ -186,7 +186,7 @@
         "name": "Inverter mode",
         "state": {
           "idle_off_grid_power_save": "Idle, off-grid power save",
-          "init": "Initializing"
+          "normal": "Normal operation"
         }
       },
       "inverter_reactive_power_l1": {

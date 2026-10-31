@@ -46,22 +46,9 @@ from .entity import (
 
 PARALLEL_UPDATES = 0
 
-# The manual marks DC string 3 and DC tracker 3 as not used.
-DC_STRINGS = (1, 2)
-DC_TRACKERS = (1, 2)
+# The manual marks DC tracker 3 as not used, but the E3/DC one reports it.
+DC_TRACKERS = (1, 2, 3)
 PHASES = ("l1", "l2", "l3")
-
-
-def _dc_string_value(
-    number: int, attribute: str
-) -> Callable[[E3dcPowerStation], StateType]:
-    """Read ``attribute`` of DC string ``number``."""
-
-    def _value(device: E3dcPowerStation) -> StateType:
-        value: StateType = getattr(device.dc_strings[number], attribute)
-        return value
-
-    return _value
 
 
 def _meter_phase_value(
@@ -144,45 +131,6 @@ STATION_SENSORS: tuple[E3dcSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=_enum_options(EmergencyPowerStatus),
         value_fn=lambda device: device.power.emergency_power_status,
-    ),
-    *(
-        description
-        for number in DC_STRINGS
-        for description in (
-            E3dcSensorDescription(
-                key=f"dc_string_{number}_power",
-                translation_key="dc_string_power",
-                translation_placeholders={"number": str(number)},
-                component="dc_strings",
-                device_class=SensorDeviceClass.POWER,
-                native_unit_of_measurement=UnitOfPower.WATT,
-                state_class=SensorStateClass.MEASUREMENT,
-                value_fn=_dc_string_value(number, "power"),
-            ),
-            E3dcSensorDescription(
-                key=f"dc_string_{number}_voltage",
-                translation_key="dc_string_voltage",
-                translation_placeholders={"number": str(number)},
-                component="dc_strings",
-                device_class=SensorDeviceClass.VOLTAGE,
-                native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-                state_class=SensorStateClass.MEASUREMENT,
-                entity_registry_enabled_default=False,
-                value_fn=_dc_string_value(number, "voltage"),
-            ),
-            E3dcSensorDescription(
-                key=f"dc_string_{number}_current",
-                translation_key="dc_string_current",
-                translation_placeholders={"number": str(number)},
-                component="dc_strings",
-                device_class=SensorDeviceClass.CURRENT,
-                native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-                state_class=SensorStateClass.MEASUREMENT,
-                suggested_display_precision=2,
-                entity_registry_enabled_default=False,
-                value_fn=_dc_string_value(number, "current"),
-            ),
-        )
     ),
     E3dcSensorDescription(
         key="max_charge_power",

@@ -76,9 +76,27 @@ async def test_user_step_success(
         hass, ModbusTcpParams(host="192.168.1.100", port=1502), 1
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_MODEL
+    assert result["title"] == f"E3/DC {MOCK_MODEL}"
     assert result["data"] == {CONF_HOST: "192.168.1.100", CONF_PORT: 1502}
     assert result["result"].unique_id == MOCK_SERIAL
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_capitalizes_the_model(hass: HomeAssistant) -> None:
+    """Test the title capitalizes a model reported in lower case."""
+    connection = MockModbusConnection()
+    seed_identity(connection.for_unit(1), model="one")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with _patch_temporary_unit(connection):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_ENTRY_DATA
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "E3/DC One"
 
 
 @pytest.mark.parametrize(

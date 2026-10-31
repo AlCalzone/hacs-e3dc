@@ -30,7 +30,9 @@ def seed(unit: MockModbusUnit, holding: dict[int, int | list[int]]) -> None:
         unit.holding[register(index)] = value
 
 
-def seed_identity(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
+def seed_identity(
+    unit: MockModbusUnit, serial: str = MOCK_SERIAL, model: str = MOCK_MODEL
+) -> None:
     """Seed the identification block: every firmware has it."""
     seed(
         unit,
@@ -39,7 +41,7 @@ def seed_identity(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
             40002: 0x0203,
             40003: 210,
             40004: _ascii_words("HagerEnergy GmbH", 16),
-            40020: _ascii_words(MOCK_MODEL, 16),
+            40020: _ascii_words(model, 16),
             40036: _ascii_words(serial, 16),
             40052: _ascii_words(MOCK_FIRMWARE, 16),
         },
@@ -90,5 +92,6 @@ def seed_power_station(unit: MockModbusUnit) -> None:
             41020: 2310,
             41024: 5001,
             41025: 2754,
+            41027: 1210,
         },
     )

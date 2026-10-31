@@ -28,11 +28,10 @@ On the power station device:
 
 - **PV power**, **Battery power**, **House power**, **Grid power**, **Additional feeder power**, **Wallbox power** and **Wallbox solar power**. Battery power is positive while charging. Grid power is positive while importing.
 - **Battery** state of charge, **Self-sufficiency**, **Self-consumption** and **Emergency power** status.
-- DC string power, voltage and current.
 - Binary sensors for the energy management status: charging or discharging locked, emergency power ready, weather-based charging, feed-in limited, and the lockout periods.
 - On newer firmware: stored energy, battery capacity and the charge and discharge limits.
 
-A device per configured power meter, per inverter, and per wallbox. Each wallbox has switches for **Charging**, **Solar charging** and **Single-phase charging**.
+A device per configured power meter, per inverter, and per wallbox. Each inverter shows the power, voltage and current of its DC trackers. Each wallbox has switches for **Charging**, **Solar charging** and **Single-phase charging**.
 
 On firmware that supports remote control, each setpoint is a number and a switch:
 

@@ -63,5 +63,6 @@ class InverterModeRequest(IntEnum):
 class InverterMode(IntEnum):
     """Register 40201: the inverter operating mode in effect."""
 
-    INIT = 0
+    NORMAL = 0
+    """No mode is forced, as in normal operation. The manual names it INIT."""
     IDLE_OFF_GRID_POWER_SAVE = 10

@@ -42,7 +42,7 @@ class Inverter(E3dcComponent):
     dc_power_1 = integer(register(41025), unit="W")
     dc_power_2 = integer(register(41026), unit="W")
     dc_power_3 = integer(register(41027), unit="W")
-    """The manual marks tracker 3 as not used."""
+    """The manual marks tracker 3 as not used, but the E3/DC one reports it."""
     dc_voltage_1 = gauge(register(41028), 0.1, unit="V")
     dc_voltage_2 = gauge(register(41029), 0.1, unit="V")
     dc_voltage_3 = gauge(register(41030), 0.1, unit="V")
