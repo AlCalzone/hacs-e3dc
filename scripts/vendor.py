@@ -40,7 +40,7 @@ SKIPPED = {"quality_scale.yaml", "strings.json"}
 TEST_IMPORTS = (
     (r"homeassistant\.components\.e3dc\b", "custom_components.e3dc"),
     (r"^from e3dc_ess_modbus", "from custom_components.e3dc.e3dc_ess_modbus"),
-    (r"^from tests\.", "from pytest_homeassistant_custom_component."),
+    (r"^from pytest_homeassistant\.", "from pytest_homeassistant_custom_component."),
 )
 KEY_REFERENCE = re.compile(r"\[%key:([a-z0-9_:]+)%\]")
 
