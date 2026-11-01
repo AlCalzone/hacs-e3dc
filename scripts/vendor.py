@@ -42,6 +42,7 @@ TEST_IMPORTS = (
     (r"^from e3dc_ess_modbus", "from custom_components.e3dc.e3dc_ess_modbus"),
     (r"^from pytest_homeassistant\.", "from pytest_homeassistant_custom_component."),
 )
+INTEGRATION_IMPORTS = ((r"^from e3dc_ess_modbus", "from .e3dc_ess_modbus"),)
 KEY_REFERENCE = re.compile(r"\[%key:([a-z0-9_:]+)%\]")
 
 
@@ -78,43 +79,17 @@ def _resolve(strings: dict, common: dict) -> dict:
             return resolve_text(node)
         return node
 
-    resolved = walk(strings)
-    if not isinstance(resolved, dict):
-        raise TypeError(resolved)
-    return resolved
+    return {key: walk(value) for key, value in strings.items()}
 
 
-def _vendor_integration(source: Path) -> None:
-    """Copy the core integration, importing the library relatively."""
-    for path in sorted(source.iterdir()):
-        if path.name in SKIPPED or path.name in ("__pycache__", "translations"):
-            continue
+def _copy(
+    source: Path, target: Path, imports: tuple[tuple[str, str], ...] = (), *skip: str
+) -> None:
+    """Copy a package, rewriting the imports of its top-level modules."""
+    shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__", *skip))
+    for path in target.glob("*.py"):
         text = path.read_text()
-        if path.suffix == ".py":
-            text = re.sub(
-                r"^from e3dc_ess_modbus",
-                "from .e3dc_ess_modbus",
-                text,
-                flags=re.MULTILINE,
-            )
-        (TARGET / path.name).write_text(text)
-
-
-def _vendor_library(source: Path) -> None:
-    """Copy the device library in as a subpackage."""
-    shutil.copytree(
-        source,
-        TARGET / "e3dc_ess_modbus",
-        ignore=shutil.ignore_patterns("__pycache__"),
-    )
-
-
-def _vendor_tests(source: Path) -> None:
-    """Copy the core tests, pointed at the custom integration."""
-    shutil.copytree(source, TESTS, ignore=shutil.ignore_patterns("__pycache__"))
-    for path in TESTS.glob("*.py"):
-        text = path.read_text()
-        for pattern, replacement in TEST_IMPORTS:
+        for pattern, replacement in imports:
             text = re.sub(pattern, replacement, text, flags=re.MULTILINE)
         path.write_text(text)
 
@@ -182,17 +157,16 @@ def main() -> None:
     sources = {"e3dc-ess-modbus": args.library, "ha-core-e3dc": args.integration}
     commits = {name: _clean_commit(path) for name, path in sources.items()}
 
-    version = args.version or "0.0.0"
-    if args.version is None and (manifest := TARGET / "manifest.json").exists():
-        version = json.loads(manifest.read_text())["version"]
+    version = (
+        args.version or json.loads((TARGET / "manifest.json").read_text())["version"]
+    )
 
     integration = args.integration / "homeassistant" / "components" / "e3dc"
     shutil.rmtree(TARGET, ignore_errors=True)
     shutil.rmtree(TESTS, ignore_errors=True)
-    TARGET.mkdir(parents=True)
-    _vendor_integration(integration)
-    _vendor_tests(args.integration / "tests" / "components" / "e3dc")
-    _vendor_library(args.library / "src" / "e3dc_ess_modbus")
+    _copy(integration, TARGET, INTEGRATION_IMPORTS, *SKIPPED, "translations")
+    _copy(args.library / "src" / "e3dc_ess_modbus", TARGET / "e3dc_ess_modbus")
+    _copy(args.integration / "tests" / "components" / "e3dc", TESTS, TEST_IMPORTS)
     _write_manifest(version)
     _write_translations(integration)
     # The rewritten imports sort differently from the originals.
