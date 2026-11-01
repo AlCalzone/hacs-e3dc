@@ -6,7 +6,7 @@ It reads the power flows between solar, battery, house, grid and wallboxes, the 
 
 ## Requirements
 
-- Home Assistant 2026.10.1 or later. The integration shares its Modbus connection through Home Assistant's `modbus` integration, and needs modbus-connection 4.12.4, which Home Assistant ships from 2026.10.1.
+- Home Assistant 2026.11 or later. The integration shares its Modbus connection through Home Assistant's `modbus` integration, and uses the config entry helpers that 2026.11 added.
 - On the power station, under **Main menu** > **Smart Functions** > **Smart Home** > **Modbus**: Modbus turned on, with **Protocol** set to **E3DC**. SunSpec mode is not supported.
 - Home Assistant in the same subnet as the power station. It answers no one else.
 
